@@ -2,8 +2,6 @@ from typing import Optional
 from google.adk.tools.tool_context import ToolContext
 
 # weather tools.
-
-
 def get_weather(city: str) -> dict:
     """Retrieves the current weather report for a specified city
 
@@ -54,28 +52,30 @@ def get_weather_stateful(city: str, tool_context: ToolContext) -> dict:
             dict: A dictionary with 'status' and either 'report' or 'error_message'.
     """
     print(f"--- Tool: get_weather_stateful called for city: {city} ---")
-    preferrred_unit = tool_context.state.get("user_preference_temperature_unit", "Celsius")
-    print(f"--- Tool: Reading state 'user_preference_temperature_unit': {preferred_unit} ---")
+    preferred_unit = tool_context.state.get(
+        "user_preference_temperature_unit", "Celsius")
+    print(
+        f"--- Tool: Reading state 'user_preference_temperature_unit': {preferred_unit} ---")
 
-    city_normalized = city.lower().replace(" ","")
-     # Internal data always stored in Celsius
+    city_normalized = city.lower().replace(" ", "")
+    # Internal data always stored in Celsius
     mock_weather_db = {
         "newyork": {"temp_c": 25, "condition": "sunny"},
         "london":  {"temp_c": 15, "condition": "cloudy"},
         "tokyo":   {"temp_c": 18, "condition": "light rain"},
     }
-    data = mock_weather_db[city]
-    temp_c = mock_weather_db["temp_c"]
+    data = mock_weather_db[city_normalized]
+    temp_c = data["temp_c"]
 
-    if preferrred_unit == "Farenheit":
-           temp_value =  (temp_c * 9/5) + 32
-           temp_unit = "°F"
+    if preferred_unit == "Fahrenheit":
+        temp_value = (temp_c * 9/5) + 32
+        temp_unit = "°F"
     else:
         temp_value = temp_c
         temp_unit = "°C"
 
     report = (
-        f"The weather in {city.capitalize()} is {data[condition]}"
+        f"The weather in {city} is {data['condition']}"
         f"with a temperature of {temp_value:.0f}{temp_unit}"
     )
 
@@ -89,14 +89,15 @@ def get_weather_stateful(city: str, tool_context: ToolContext) -> dict:
 # Greeting / farewell tools
 # ---------------------------------------------------------------------------
 
+
 def say_hello(name: Optional[str] = None) -> str:
     """Provides a friendly greeting. Uses the person's name if provided
     Args:
         name (str, optional): The name of the person to greet.
- 
+
     Returns:
         str: A friendly greeting message.
-    
+
     """
     if name:
         print(f"--- Tool: say_hello called with name: {name} ---")
@@ -106,11 +107,7 @@ def say_hello(name: Optional[str] = None) -> str:
     return "Hello there!"
 
 
-def say_goodbye()->str:
+def say_goodbye() -> str:
     """Provides a polite farewell message to conclude the conversation."""
     print("--- Tool: say_goodbye called ---")
     return "Goodbye! Have a great day."
-
-
-
-

@@ -19,6 +19,7 @@ Why os.environ["KEY"] = value after os.getenv("KEY")?
 """
 
 import os
+os.environ["OTEL_SDK_DISABLED"] = os.getenv("OTEL_SDK_DISABLED", "true")
 from dotenv import load_dotenv
 
 load_dotenv()
