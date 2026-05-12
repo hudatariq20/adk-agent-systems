@@ -17,6 +17,7 @@ from google.adk.models.llm_response import LlmResponse
 from google.adk.tools.base_tool import BaseTool
 from google.adk.tools.tool_context import ToolContext
 from google.genai import types
+from typing import Optional, Dict, Any
 
 # ---------------------------------------------------------------------------
 # Input guardrail — blocks requests containing the word "BLOCK"
@@ -47,7 +48,7 @@ def block_keyword_guardrail(
             if content.role == "user" and content.parts and content.parts[0].text:
                 last_user_msg_text = content.parts[0].text
                 break
-    print(f"--- Callback: Inspecting message: '{last_user_message_text[:120]}' ---") 
+    print(f"--- Callback: Inspecting message: '{last_user_msg_text[:120]}' ---") 
 
     if "BLOCK" in last_user_msg_text.upper():
         callback_context.state["guardrail_block_keyword_triggered"] =True
@@ -71,37 +72,26 @@ def block_keyword_guardrail(
 
 def block_paris_tool_guardrail(
     tool: BaseTool,
-    args:Dict[str,Any],
-    tool_context : ToolContext
-)-> Optional[Dict]:
-    """Prevents get_weather_stateful from running when the city is Paris.
-       
-       When blocked, a dictionary is called which mimics the tools own error format.
-       The actual tool function is never called. A flag is written to the state.
-
-        Args:
-        tool: The tool object about to be executed.
-        args: The arguments the LLM generated for the tool call.
-        tool_context: Provides session state access and agent name.
-
-        Returns:
-        A dict (used as the tool result) to block, or None to allow.
-    """
+    args: Dict[str, Any],
+    tool_context: ToolContext,
+) -> Optional[Dict]:
     tool_name = tool.name
-    agent_name = tool_context.agent_name
 
     if tool_name == "get_weather_stateful":
         city_arg = args.get("city", "")
+
         if city_arg and city_arg.lower() == "paris":
-             tool_context.state["guardrail_tool_block_triggered"] = True
-        return {
+            tool_context.state["guardrail_tool_block_triggered"] = True
+            return {
                 "status": "error",
                 "error_message": (
                     f"Policy restriction: Weather checks for "
                     f"'{city_arg.capitalize()}' are currently disabled."
                 ),
             }
+
         print(f"--- Callback: City '{city_arg}' is allowed. Proceeding. ---")
-    else:
-        print(f"--- Callback: Tool '{tool_name}' is not targeted. Allowing. ---")
+        return None
+
+    print(f"--- Callback: Tool '{tool_name}' is not targeted. Allowing. ---")
     return None
